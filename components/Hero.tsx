@@ -166,7 +166,7 @@ const Hero: React.FC = () => {
                 className="group relative px-8 py-3 bg-white text-black font-bold font-mono tracking-widest overflow-hidden transition-all hover:scale-105"
              >
                 <div className="absolute inset-0 bg-tactical-green translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                <span className="relative z-10 flex items-center gap-2 group-hover:text-black">查看装备库 <span className="text-xs opacity-50">-></span></span>
+                <span className="relative z-10 flex items-center gap-2 group-hover:text-black">查看装备库 <span className="text-xs opacity-50">{'->'}</span></span>
              </button>
 
              <button 
@@ -174,7 +174,7 @@ const Hero: React.FC = () => {
                 className="group relative px-8 py-3 bg-transparent border border-white/30 text-white font-bold font-mono tracking-widest hover:border-tactical-green transition-all"
              >
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <span className="relative z-10 flex items-center gap-2 group-hover:text-tactical-green"><Terminal size={16} /> >_ 通讯终端</span>
+                <span className="relative z-10 flex items-center gap-2 group-hover:text-tactical-green"><Terminal size={16} /> {'>_'} 通讯终端</span>
              </button>
         </motion.div>
       </div>

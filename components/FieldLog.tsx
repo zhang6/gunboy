@@ -95,7 +95,7 @@ const FieldLog: React.FC = () => {
 
                                 <div className="mt-4 pt-4 border-t border-dashed border-slate-800 flex justify-between items-center">
                                     <span className="text-[10px] bg-slate-900 text-slate-300 px-2 py-1 rounded border border-slate-700">{log.status}</span>
-                                    <button className="text-tactical-green text-xs hover:underline opacity-0 group-hover:opacity-100 transition-opacity">DETAILS >></button>
+                                    <button className="text-tactical-green text-xs hover:underline opacity-0 group-hover:opacity-100 transition-opacity">DETAILS {'>>'}</button>
                                 </div>
                             </div>
 
