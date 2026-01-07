@@ -19,6 +19,25 @@ const App: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [showIntro, setShowIntro] = useState(true);
 
+  // Ensure page scrolls to top on load and after intro completes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    // Also prevent hash-based scrolling
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  // Reset scroll position when intro completes
+  useEffect(() => {
+    if (!showIntro) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  }, [showIntro]);
+
   // Custom cursor follower effect
   useEffect(() => {
     const updateCursor = (e: MouseEvent) => {
