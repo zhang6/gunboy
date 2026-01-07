@@ -17,3 +17,24 @@ export interface Skill {
   level: number; // 0-100
   icon: string;
 }
+
+export interface VisitRecord {
+  id?: number;
+  ip_address?: string;
+  user_agent?: string;
+  referrer?: string;
+  path?: string;
+  screen_width?: number;
+  screen_height?: number;
+  language?: string;
+  timezone?: string;
+  region?: string; // IP所属区域（国家/地区）
+  created_at?: string;
+}
+
+export interface VisitStats {
+  totalVisits: number;
+  uniqueIPCount: number;
+  recentVisits: VisitRecord[];
+  dailyCounts: Record<string, number>;
+}

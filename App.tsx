@@ -13,39 +13,70 @@ import AIChat from './components/AIChat';
 import IntroSequence from './components/IntroSequence';
 import CombatDoctrine from './components/CombatDoctrine';
 import SkillMatrix from './components/SkillMatrix';
+import Analytics from './components/Analytics';
+import { recordVisit } from './services/analyticsService';
 import { Crosshair } from 'lucide-react';
 
 const App: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [showIntro, setShowIntro] = useState(true);
+  const [isAnalyticsPage, setIsAnalyticsPage] = useState(false);
 
-  // Ensure page scrolls to top on load and after intro completes
+  // 检查是否是访问统计页面
   useEffect(() => {
-    window.scrollTo(0, 0);
-    // Also prevent hash-based scrolling
-    if (window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname);
+    const path = window.location.pathname;
+    if (path === '/analytics' || path === '/stats' || path === '/analytics.html') {
+      setIsAnalyticsPage(true);
     }
   }, []);
 
+  // 记录访问（仅在主页面）
+  useEffect(() => {
+    if (!isAnalyticsPage) {
+      // 延迟记录，避免影响页面加载
+      const timer = setTimeout(() => {
+        recordVisit().catch(console.error);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnalyticsPage]);
+
+  // Ensure page scrolls to top on load and after intro completes
+  useEffect(() => {
+    if (!isAnalyticsPage) {
+      window.scrollTo(0, 0);
+      // Also prevent hash-based scrolling
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  }, [isAnalyticsPage]);
+
   // Reset scroll position when intro completes
   useEffect(() => {
-    if (!showIntro) {
+    if (!showIntro && !isAnalyticsPage) {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
     }
-  }, [showIntro]);
+  }, [showIntro, isAnalyticsPage]);
 
   // Custom cursor follower effect
   useEffect(() => {
-    const updateCursor = (e: MouseEvent) => {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', updateCursor);
-    return () => window.removeEventListener('mousemove', updateCursor);
-  }, []);
+    if (!isAnalyticsPage) {
+      const updateCursor = (e: MouseEvent) => {
+        setCursorPosition({ x: e.clientX, y: e.clientY });
+      };
+      window.addEventListener('mousemove', updateCursor);
+      return () => window.removeEventListener('mousemove', updateCursor);
+    }
+  }, [isAnalyticsPage]);
+
+  // 如果是访问统计页面，直接渲染统计组件
+  if (isAnalyticsPage) {
+    return <Analytics />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-tactical-green selection:text-black">

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Radio, Settings } from 'lucide-react';
-import { sendMessageToSiliconFlow } from '../services/siliconFlowService';
+import { sendMessageToHunyuan } from '../services/hunyuanService';
 import { ChatMessage } from '../types';
 
 const AIChat: React.FC = () => {
@@ -59,7 +59,7 @@ const AIChat: React.FC = () => {
     try {
       // 流式接收响应
       let accumulatedText = '';
-      const responseText = await sendMessageToSiliconFlow(userMsgText, {
+      const responseText = await sendMessageToHunyuan(userMsgText, {
         onChunk: (chunk: string) => {
           accumulatedText += chunk;
           // 使用 id 来唯一标识消息，确保只更新正确的 bot 消息
