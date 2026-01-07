@@ -1,38 +1,96 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Radio, Settings } from 'lucide-react';
-import { sendMessageToGemini } from '../services/geminiService';
+import { sendMessageToSiliconFlow } from '../services/siliconFlowService';
 import { ChatMessage } from '../types';
 
 const AIChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: "欢迎来到军械库。想聊聊 9mm 还是 .45 ACP？或者需要光学瞄具的归零建议？🔧", timestamp: Date.now() }
+    { role: 'model', text: "欢迎来到军械库。想聊聊 9mm 还是 .45 ACP？或者需要光学瞄具的归零建议？🔧", timestamp: Date.now(), id: 0 }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
+  const messageIdCounter = useRef(1);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    // 防止首次加载时自动滚动
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     scrollToBottom();
   }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMsg: ChatMessage = { role: 'user', text: input, timestamp: Date.now() };
+    const userMsgText = input.trim();
+    const now = Date.now();
+    // 使用计数器确保消息 ID 唯一
+    messageIdCounter.current += 1;
+    const userMsgId = messageIdCounter.current;
+    const userMsg: ChatMessage = { 
+      role: 'user', 
+      text: userMsgText, 
+      timestamp: now, 
+      id: userMsgId 
+    };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
 
-    const responseText = await sendMessageToGemini(input);
-    
-    const botMsg: ChatMessage = { role: 'model', text: responseText, timestamp: Date.now() };
+    // 创建 bot 消息，使用不同的 ID，但使用相同的时间戳（稍微延迟一点）
+    messageIdCounter.current += 1;
+    const botMsgId = messageIdCounter.current;
+    const botMsg: ChatMessage = { 
+      role: 'model', 
+      text: '', 
+      timestamp: Date.now(), 
+      id: botMsgId 
+    };
     setMessages(prev => [...prev, botMsg]);
-    setIsLoading(false);
+
+    try {
+      // 流式接收响应
+      let accumulatedText = '';
+      const responseText = await sendMessageToSiliconFlow(userMsgText, {
+        onChunk: (chunk: string) => {
+          accumulatedText += chunk;
+          // 使用 id 来唯一标识消息，确保只更新正确的 bot 消息
+          setMessages(prev => prev.map(msg => 
+            msg.id === botMsgId && msg.role === 'model'
+              ? { ...msg, text: accumulatedText }
+              : msg
+          ));
+          scrollToBottom();
+        }
+      });
+
+      // 确保最终文本被设置（如果流式响应结束时还没有完整文本）
+      if (responseText && responseText !== accumulatedText) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === botMsgId && msg.role === 'model'
+            ? { ...msg, text: responseText }
+            : msg
+        ));
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      setMessages(prev => prev.map(msg => 
+        msg.id === botMsgId && msg.role === 'model'
+          ? { ...msg, text: '火控系统故障，请重试！💥' }
+          : msg
+      ));
+    } finally {
+      setIsLoading(false);
+      scrollToBottom();
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -73,9 +131,9 @@ const AIChat: React.FC = () => {
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 font-mono">
                     <AnimatePresence>
-                        {messages.map((msg, idx) => (
+                        {messages.map((msg) => (
                             <motion.div
-                                key={idx}
+                                key={msg.id ?? msg.timestamp}
                                 initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
